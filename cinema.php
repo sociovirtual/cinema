@@ -1,11 +1,21 @@
 <?php
-/*
-Plugin Name: Cinema
-Description: Plugin para gestionar una cartelera de cine.
-Version: 1.0.3
-Author: Sociovirtual.com
-*/
+/**
+ * Plugin Name: Cinema
+ * Plugin URI: https://sociovirtual.com/plugins/cinema
+ * Description: Gestiona y muestra información detallada sobre películas en tu sitio web.
+ * Version: 1.0.4
+ * Author: Jose Vargas Molina
+ * Author URI: https://sociovirtual.com
+ * License: GPLv2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: cinema
+ * Domain Path: /languages
+ */
 
+// Exit si se accede directamente.
+if (!defined('ABSPATH')) {
+    exit;
+}
 
 // Incluir archivos necesarios
 require_once plugin_dir_path(__FILE__) . 'includes/meta-boxes.php';

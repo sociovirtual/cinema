@@ -1,0 +1,32 @@
+msgid ""
+msgstr ""
+"Language: es_ES\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "No se encontraron películas."
+msgstr "No se encontraron películas."
+
+msgid "Anterior"
+msgstr "Anterior"
+
+msgid "Siguiente"
+msgstr "Siguiente"
+
+msgid "Clasificación:"
+msgstr "Clasificación:"
+
+msgid "Duración:"
+msgstr "Duración:"
+
+msgid "En Cartelera"
+msgstr "En Cartelera"
+
+msgid "Próximo Estreno"
+msgstr "Próximo Estreno"
+
+msgid "Pre-Venta"
+msgstr "Pre-Venta"
+
+msgid "Ver detalles"
+msgstr "Ver detalles"
