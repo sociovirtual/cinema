@@ -68,9 +68,7 @@ function cinema_movie_details_callback($post) {
     $duracion = get_post_meta($post->ID, '_cinema_duracion', true);
     $clasificacion = get_post_meta($post->ID, '_cinema_clasificacion', true);
     $trailer = get_post_meta($post->ID, '_cinema_trailer', true);
-    $formato = get_post_meta($post->ID, '_cinema_formato', true);
     $horarios = get_post_meta($post->ID, '_cinema_horarios', true);
-    $doblaje = get_post_meta($post->ID, '_cinema_doblaje', true);
     $poster = get_post_meta($post->ID, '_cinema_poster', true);
 
     echo '<label for="cinema_clasificacion">Clasificación:</label>';
@@ -85,22 +83,48 @@ function cinema_movie_details_callback($post) {
     echo '<input type="text" id="cinema_trailer" name="cinema_trailer" value="' . esc_attr($trailer) . '" size="25" />';
     echo '<br/><br/>';
 
-    echo '<label for="cinema_formato">Formato (3D, 2D, etc.):</label>';
-    echo '<input type="text" id="cinema_formato" name="cinema_formato" value="' . esc_attr($formato) . '" size="25" />';
-    echo '<br/><br/>';
-
-    echo '<label for="cinema_horarios">Horarios:</label>';
-    echo '<textarea id="cinema_horarios" name="cinema_horarios" rows="5" cols="50">' . esc_textarea($horarios) . '</textarea>';
-    echo '<br/><br/>';
-
-    echo '<label for="cinema_doblaje">Doblaje:</label>';
-    echo '<input type="text" id="cinema_doblaje" name="cinema_doblaje" value="' . esc_attr($doblaje) . '" size="25" />';
-    echo '<br/><br/>';
-
     echo '<label for="cinema_poster">URL del Póster:</label>';
     echo '<input type="text" id="cinema_poster" name="cinema_poster" value="' . esc_attr($poster) . '" size="25" />';
-}
+    echo '<br/><br/>';
 
+    echo '<label>Horarios, Formato y Doblaje:</label>';
+    echo '<div id="cinema-horarios-wrapper">';
+    if ($horarios) {
+        foreach ($horarios as $index => $horario) {
+            echo '<div class="cinema-horario-group">';
+            echo '<input type="text" name="cinema_horarios[' . $index . '][hora]" value="' . esc_attr($horario['hora']) . '" placeholder="Hora" />';
+            echo '<input type="text" name="cinema_horarios[' . $index . '][formato]" value="' . esc_attr($horario['formato']) . '" placeholder="Formato" />';
+            echo '<input type="text" name="cinema_horarios[' . $index . '][doblaje]" value="' . esc_attr($horario['doblaje']) . '" placeholder="Doblaje" />';
+            echo '<button class="button remove-horario">Eliminar</button>';
+            echo '</div>';
+        }
+    }
+    echo '</div>';
+    echo '<button class="button add-horario">Añadir Horario</button>';
+
+    ?>
+    <script>
+    jQuery(document).ready(function($) {
+        $('.add-horario').on('click', function(e) {
+            e.preventDefault();
+            var index = $('#cinema-horarios-wrapper .cinema-horario-group').length;
+            $('#cinema-horarios-wrapper').append(
+                '<div class="cinema-horario-group">' +
+                '<input type="text" name="cinema_horarios[' + index + '][hora]" placeholder="Hora" />' +
+                '<input type="text" name="cinema_horarios[' + index + '][formato]" placeholder="Formato" />' +
+                '<input type="text" name="cinema_horarios[' + index + '][doblaje]" placeholder="Doblaje" />' +
+                '<button class="button remove-horario">Eliminar</button>' +
+                '</div>'
+            );
+        });
+        $(document).on('click', '.remove-horario', function(e) {
+            e.preventDefault();
+            $(this).parent('.cinema-horario-group').remove();
+        });
+    });
+    </script>
+    <?php
+}
 
 function cinema_save_movie_details($post_id) {
     if (!isset($_POST['cinema_movie_details_nonce']) || !wp_verify_nonce($_POST['cinema_movie_details_nonce'], 'cinema_save_movie_details')) {
@@ -123,23 +147,24 @@ function cinema_save_movie_details($post_id) {
         update_post_meta($post_id, '_cinema_trailer', sanitize_text_field($_POST['cinema_trailer']));
     }
 
-    if (isset($_POST['cinema_formato'])) {
-        update_post_meta($post_id, '_cinema_formato', sanitize_text_field($_POST['cinema_formato']));
-    }
-
-    if (isset($_POST['cinema_horarios'])) {
-        update_post_meta($post_id, '_cinema_horarios', sanitize_textarea_field($_POST['cinema_horarios']));
-    }
-
-    if (isset($_POST['cinema_doblaje'])) {
-        update_post_meta($post_id, '_cinema_doblaje', sanitize_text_field($_POST['cinema_doblaje']));
-    }
-
     if (isset($_POST['cinema_poster'])) {
         update_post_meta($post_id, '_cinema_poster', esc_url_raw($_POST['cinema_poster']));
     }
+
+    if (isset($_POST['cinema_horarios'])) {
+        $horarios = array();
+        foreach ($_POST['cinema_horarios'] as $horario) {
+            $horarios[] = array(
+                'hora' => sanitize_text_field($horario['hora']),
+                'formato' => sanitize_text_field($horario['formato']),
+                'doblaje' => sanitize_text_field($horario['doblaje']),
+            );
+        }
+        update_post_meta($post_id, '_cinema_horarios', $horarios);
+    }
 }
 add_action('save_post', 'cinema_save_movie_details');
+
 
 
 // Shortcode para mostrar las películas
@@ -163,10 +188,15 @@ function cinema_display_movies($atts) {
             $output .= '<p>Clasificación: ' . get_post_meta(get_the_ID(), '_cinema_clasificacion', true) . '</p>';
             $output .= '<p>Duración: ' . get_post_meta(get_the_ID(), '_cinema_duracion', true) . ' min</p>';
             $output .= '<p>Tráiler: <a href="' . esc_url(get_post_meta(get_the_ID(), '_cinema_trailer', true)) . '" target="_blank">Ver tráiler</a></p>';
-            $output .= '<p>Formato: ' . get_post_meta(get_the_ID(), '_cinema_formato', true) . '</p>';
-            $output .= '<p>Horarios: ' . nl2br(get_post_meta(get_the_ID(), '_cinema_horarios', true)) . '</p>';
-            $output .= '<p>Doblaje: ' . get_post_meta(get_the_ID(), '_cinema_doblaje', true) . '</p>';
             $output .= '<p><img src="' . esc_url(get_post_meta(get_the_ID(), '_cinema_poster', true)) . '" alt="Póster de ' . get_the_title() . '"></p>';
+            $output .= '<div class="horarios">';
+            $horarios = get_post_meta(get_the_ID(), '_cinema_horarios', true);
+            if ($horarios) {
+                foreach ($horarios as $horario) {
+                    $output .= '<p>Hora: ' . esc_html($horario['hora']) . ', Formato: ' . esc_html($horario['formato']) . ', Doblaje: ' . esc_html($horario['doblaje']) . '</p>';
+                }
+            }
+            $output .= '</div>';
             $output .= '</div>';
         }
         $output .= '</div>';
@@ -177,6 +207,7 @@ function cinema_display_movies($atts) {
     return $output;
 }
 add_shortcode('cinema_movies', 'cinema_display_movies');
+
 
 
 // Cargar estilos y scripts
