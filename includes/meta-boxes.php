@@ -20,8 +20,8 @@ function cinema_movie_details_callback($post) {
     $duracion = get_post_meta($post->ID, '_cinema_duracion', true);
     $clasificacion = get_post_meta($post->ID, '_cinema_clasificacion', true);
     $trailer = get_post_meta($post->ID, '_cinema_trailer', true);
+    $poster_id = get_post_meta($post->ID, '_cinema_poster_id', true);
     $horarios = get_post_meta($post->ID, '_cinema_horarios', true);
-    $poster = get_post_meta($post->ID, '_cinema_poster', true);
 
     echo '<label for="cinema_clasificacion">Clasificación:</label>';
     echo '<input type="text" id="cinema_clasificacion" name="cinema_clasificacion" value="' . esc_attr($clasificacion) . '" size="25" />';
@@ -35,8 +35,12 @@ function cinema_movie_details_callback($post) {
     echo '<input type="text" id="cinema_trailer" name="cinema_trailer" value="' . esc_attr($trailer) . '" size="25" />';
     echo '<br/><br/>';
 
-    echo '<label for="cinema_poster">URL del Póster:</label>';
-    echo '<input type="text" id="cinema_poster" name="cinema_poster" value="' . esc_attr($poster) . '" size="25" />';
+    echo '<label for="cinema_poster">Póster:</label>';
+    if ($poster_id) {
+        echo '<div><img src="' . esc_url(wp_get_attachment_image_url($poster_id, 'thumbnail')) . '" style="max-width: 200px; height: auto;" /><br/><a href="#" id="remove_cinema_poster">Eliminar</a></div>';
+    }
+    echo '<input type="hidden" id="cinema_poster_id" name="cinema_poster_id" value="' . esc_attr($poster_id) . '" />';
+    echo '<button class="button" id="upload_cinema_poster">Subir/Seleccionar Póster</button>';
     echo '<br/><br/>';
 
     echo '<label>Horarios, Formato y Doblaje:</label>';
@@ -57,6 +61,32 @@ function cinema_movie_details_callback($post) {
     ?>
     <script>
     jQuery(document).ready(function($) {
+        // Subir/Seleccionar Póster
+        $('#upload_cinema_poster').click(function(e) {
+            e.preventDefault();
+            var custom_uploader = wp.media({
+                title: 'Seleccionar Póster',
+                button: {
+                    text: 'Seleccionar'
+                },
+                multiple: false
+            });
+            custom_uploader.on('select', function() {
+                var attachment = custom_uploader.state().get('selection').first().toJSON();
+                $('#cinema_poster_id').val(attachment.id);
+                $('#cinema_poster').html('<img src="' + attachment.url + '" style="max-width:200px;height:auto;"/><br/><a href="#" id="remove_cinema_poster">Eliminar</a>');
+            });
+            custom_uploader.open();
+        });
+
+        // Eliminar Póster
+        $(document).on('click', '#remove_cinema_poster', function(e) {
+            e.preventDefault();
+            $('#cinema_poster_id').val('');
+            $('#cinema_poster').html('<button class="button" id="upload_cinema_poster">Subir/Seleccionar Póster</button>');
+        });
+
+        // Añadir/Quitar Horario
         $('.add-horario').on('click', function(e) {
             e.preventDefault();
             var index = $('#cinema-horarios-wrapper .cinema-horario-group').length;
@@ -100,8 +130,8 @@ function cinema_save_movie_details($post_id) {
         update_post_meta($post_id, '_cinema_trailer', sanitize_text_field($_POST['cinema_trailer']));
     }
 
-    if (isset($_POST['cinema_poster'])) {
-        update_post_meta($post_id, '_cinema_poster', esc_url_raw($_POST['cinema_poster']));
+    if (isset($_POST['cinema_poster_id'])) {
+        update_post_meta($post_id, '_cinema_poster_id', sanitize_text_field($_POST['cinema_poster_id']));
     }
 
     if (isset($_POST['cinema_horarios'])) {
