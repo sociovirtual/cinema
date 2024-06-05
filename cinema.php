@@ -2,8 +2,8 @@
 /*
 Plugin Name: Cinema
 Description: Plugin para gestionar una cartelera de cine.
-Version: 1.0
-Author: Tu Nombre
+Version: 1.0.1
+Author: Sociovirtual.com
 */
 
 // Asegurarse de que el archivo no se accede directamente
@@ -66,14 +66,41 @@ function cinema_movie_details_callback($post) {
     wp_nonce_field('cinema_save_movie_details', 'cinema_movie_details_nonce');
 
     $duracion = get_post_meta($post->ID, '_cinema_duracion', true);
-    $director = get_post_meta($post->ID, '_cinema_director', true);
+    $clasificacion = get_post_meta($post->ID, '_cinema_clasificacion', true);
+    $trailer = get_post_meta($post->ID, '_cinema_trailer', true);
+    $formato = get_post_meta($post->ID, '_cinema_formato', true);
+    $horarios = get_post_meta($post->ID, '_cinema_horarios', true);
+    $doblaje = get_post_meta($post->ID, '_cinema_doblaje', true);
+    $poster = get_post_meta($post->ID, '_cinema_poster', true);
+
+    echo '<label for="cinema_clasificacion">Clasificación:</label>';
+    echo '<input type="text" id="cinema_clasificacion" name="cinema_clasificacion" value="' . esc_attr($clasificacion) . '" size="25" />';
+    echo '<br/><br/>';
 
     echo '<label for="cinema_duracion">Duración (min):</label>';
     echo '<input type="number" id="cinema_duracion" name="cinema_duracion" value="' . esc_attr($duracion) . '" size="25" />';
     echo '<br/><br/>';
-    echo '<label for="cinema_director">Director:</label>';
-    echo '<input type="text" id="cinema_director" name="cinema_director" value="' . esc_attr($director) . '" size="25" />';
+
+    echo '<label for="cinema_trailer">URL del Tráiler:</label>';
+    echo '<input type="text" id="cinema_trailer" name="cinema_trailer" value="' . esc_attr($trailer) . '" size="25" />';
+    echo '<br/><br/>';
+
+    echo '<label for="cinema_formato">Formato (3D, 2D, etc.):</label>';
+    echo '<input type="text" id="cinema_formato" name="cinema_formato" value="' . esc_attr($formato) . '" size="25" />';
+    echo '<br/><br/>';
+
+    echo '<label for="cinema_horarios">Horarios:</label>';
+    echo '<textarea id="cinema_horarios" name="cinema_horarios" rows="5" cols="50">' . esc_textarea($horarios) . '</textarea>';
+    echo '<br/><br/>';
+
+    echo '<label for="cinema_doblaje">Doblaje:</label>';
+    echo '<input type="text" id="cinema_doblaje" name="cinema_doblaje" value="' . esc_attr($doblaje) . '" size="25" />';
+    echo '<br/><br/>';
+
+    echo '<label for="cinema_poster">URL del Póster:</label>';
+    echo '<input type="text" id="cinema_poster" name="cinema_poster" value="' . esc_attr($poster) . '" size="25" />';
 }
+
 
 function cinema_save_movie_details($post_id) {
     if (!isset($_POST['cinema_movie_details_nonce']) || !wp_verify_nonce($_POST['cinema_movie_details_nonce'], 'cinema_save_movie_details')) {
@@ -88,11 +115,32 @@ function cinema_save_movie_details($post_id) {
         update_post_meta($post_id, '_cinema_duracion', sanitize_text_field($_POST['cinema_duracion']));
     }
 
-    if (isset($_POST['cinema_director'])) {
-        update_post_meta($post_id, '_cinema_director', sanitize_text_field($_POST['cinema_director']));
+    if (isset($_POST['cinema_clasificacion'])) {
+        update_post_meta($post_id, '_cinema_clasificacion', sanitize_text_field($_POST['cinema_clasificacion']));
+    }
+
+    if (isset($_POST['cinema_trailer'])) {
+        update_post_meta($post_id, '_cinema_trailer', sanitize_text_field($_POST['cinema_trailer']));
+    }
+
+    if (isset($_POST['cinema_formato'])) {
+        update_post_meta($post_id, '_cinema_formato', sanitize_text_field($_POST['cinema_formato']));
+    }
+
+    if (isset($_POST['cinema_horarios'])) {
+        update_post_meta($post_id, '_cinema_horarios', sanitize_textarea_field($_POST['cinema_horarios']));
+    }
+
+    if (isset($_POST['cinema_doblaje'])) {
+        update_post_meta($post_id, '_cinema_doblaje', sanitize_text_field($_POST['cinema_doblaje']));
+    }
+
+    if (isset($_POST['cinema_poster'])) {
+        update_post_meta($post_id, '_cinema_poster', esc_url_raw($_POST['cinema_poster']));
     }
 }
 add_action('save_post', 'cinema_save_movie_details');
+
 
 // Shortcode para mostrar las películas
 function cinema_display_movies($atts) {
@@ -112,8 +160,13 @@ function cinema_display_movies($atts) {
             $output .= '<div class="movie">';
             $output .= '<h2>' . get_the_title() . '</h2>';
             $output .= '<div>' . get_the_content() . '</div>';
+            $output .= '<p>Clasificación: ' . get_post_meta(get_the_ID(), '_cinema_clasificacion', true) . '</p>';
             $output .= '<p>Duración: ' . get_post_meta(get_the_ID(), '_cinema_duracion', true) . ' min</p>';
-            $output .= '<p>Director: ' . get_post_meta(get_the_ID(), '_cinema_director', true) . '</p>';
+            $output .= '<p>Tráiler: <a href="' . esc_url(get_post_meta(get_the_ID(), '_cinema_trailer', true)) . '" target="_blank">Ver tráiler</a></p>';
+            $output .= '<p>Formato: ' . get_post_meta(get_the_ID(), '_cinema_formato', true) . '</p>';
+            $output .= '<p>Horarios: ' . nl2br(get_post_meta(get_the_ID(), '_cinema_horarios', true)) . '</p>';
+            $output .= '<p>Doblaje: ' . get_post_meta(get_the_ID(), '_cinema_doblaje', true) . '</p>';
+            $output .= '<p><img src="' . esc_url(get_post_meta(get_the_ID(), '_cinema_poster', true)) . '" alt="Póster de ' . get_the_title() . '"></p>';
             $output .= '</div>';
         }
         $output .= '</div>';
@@ -124,6 +177,7 @@ function cinema_display_movies($atts) {
     return $output;
 }
 add_shortcode('cinema_movies', 'cinema_display_movies');
+
 
 // Cargar estilos y scripts
 function cinema_enqueue_scripts() {
