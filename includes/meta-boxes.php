@@ -21,6 +21,9 @@ function cinema_movie_details_callback($post) {
     $clasificacion = get_post_meta($post->ID, '_cinema_clasificacion', true);
     $trailer = get_post_meta($post->ID, '_cinema_trailer', true);
     $poster_id = get_post_meta($post->ID, '_cinema_poster_id', true);
+    $cartelera = get_post_meta($post->ID, '_cinema_cartelera', true);
+    $proximo_estreno = get_post_meta($post->ID, '_cinema_proximo_estreno', true);
+    $pre_venta = get_post_meta($post->ID, '_cinema_pre_venta', true);
     $horarios = get_post_meta($post->ID, '_cinema_horarios', true);
 
     echo '<label for="cinema_clasificacion">Clasificación:</label>';
@@ -42,6 +45,19 @@ function cinema_movie_details_callback($post) {
     echo '<input type="hidden" id="cinema_poster_id" name="cinema_poster_id" value="' . esc_attr($poster_id) . '" />';
     echo '<button class="button" id="upload_cinema_poster">Subir/Seleccionar Póster</button>';
     echo '<br/><br/>';
+
+  echo '<label for="cinema_cartelera">¿En Cartelera?</label>';
+    echo '<input type="checkbox" id="cinema_cartelera" name="cinema_cartelera" value="1" ' . checked($cartelera, '1', false) . ' />';
+    echo '<br/><br/>';
+
+    echo '<label for="cinema_proximo_estreno">¿Próximo Estreno?</label>';
+    echo '<input type="checkbox" id="cinema_proximo_estreno" name="cinema_proximo_estreno" value="1" ' . checked($proximo_estreno, '1', false) . ' />';
+    echo '<br/><br/>';
+
+    echo '<label for="cinema_pre_venta">¿Pre-Venta?</label>';
+    echo '<input type="checkbox" id="cinema_pre_venta" name="cinema_pre_venta" value="1" ' . checked($pre_venta, '1', false) . ' />';
+    echo '<br/><br/>';
+
 
     echo '<label>Horarios, Formato y Doblaje:</label>';
     echo '<div id="cinema-horarios-wrapper">';
@@ -134,6 +150,12 @@ function cinema_save_movie_details($post_id) {
         update_post_meta($post_id, '_cinema_poster_id', sanitize_text_field($_POST['cinema_poster_id']));
     }
 
+    // Guardar opciones "sí o no"
+    update_post_meta($post_id, '_cinema_cartelera', isset($_POST['cinema_cartelera']) ? '1' : '0');
+    update_post_meta($post_id, '_cinema_proximo_estreno', isset($_POST['cinema_proximo_estreno']) ? '1' : '0');
+    update_post_meta($post_id, '_cinema_pre_venta', isset($_POST['cinema_pre_venta']) ? '1' : '0');
+
+    // Guardar horarios
     if (isset($_POST['cinema_horarios'])) {
         $horarios = array();
         foreach ($_POST['cinema_horarios'] as $horario) {
