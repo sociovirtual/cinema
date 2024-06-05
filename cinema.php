@@ -51,3 +51,68 @@ function cinema_register_post_type() {
     register_post_type('pelicula', $args);
 }
 add_action('init', 'cinema_register_post_type');
+
+
+// Registrar un endpoint de API REST para películas
+function cinema_register_rest_endpoint() {
+    register_rest_route('cinema/v1', '/movies/', array(
+        'methods' => 'GET',
+        'callback' => 'cinema_get_movies',
+    ));
+}
+add_action('rest_api_init', 'cinema_register_rest_endpoint');
+
+// Callback para obtener películas
+function cinema_get_movies($data) {
+    $args = array(
+        'post_type' => 'peliculas', // Nombre del tipo de post
+        'posts_per_page' => -1,
+    );
+
+    $query = new WP_Query($args);
+    $movies = array();
+
+    if ($query->have_posts()) {
+        while ($query->have_posts()) {
+            $query->the_post();
+
+            // Obtener metadatos de la película
+            $movie_data = array(
+                'id' => get_the_ID(),
+                'title' => get_the_title(),
+                'clasificacion' => get_post_meta(get_the_ID(), '_cinema_clasificacion', true),
+                'duracion' => get_post_meta(get_the_ID(), '_cinema_duracion', true),
+                'url_trailer' => get_post_meta(get_the_ID(), '_cinema_url_trailer', true),
+                'formato' => get_post_meta(get_the_ID(), '_cinema_formato', true),
+                'horarios' => get_post_meta(get_the_ID(), '_cinema_horarios', true),
+                'doblaje' => get_post_meta(get_the_ID(), '_cinema_doblaje', true),
+                'poster' => get_post_meta(get_the_ID(), '_cinema_poster', true),
+                'preventa' => get_post_meta(get_the_ID(), '_cinema_preventa', true),
+            );
+
+            $movies[] = $movie_data;
+        }
+    }
+
+    wp_reset_postdata();
+
+    return rest_ensure_response($movies);
+}
+
+
+
+// Registrar campos personalizados en WPGraphQL
+function cinema_register_graphql_fields() {
+    if (function_exists('register_graphql_field')) {
+        register_graphql_field('Pelicula', 'clasificacion', array(
+            'type' => 'String',
+            'description' => 'Clasificación de la película.',
+            'resolve' => function ($post) {
+                return get_post_meta($post->ID, '_cinema_clasificacion', true);
+            },
+        ));
+
+        // Registrar más campos según sea necesario
+    }
+}
+add_action('graphql_register_types', 'cinema_register_graphql_fields');
