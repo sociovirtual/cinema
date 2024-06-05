@@ -1,0 +1,13 @@
+.cinema-movies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.movie {
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 5px;
+  width: calc(33.333% - 20px);
+  box-sizing: border-box;
+}
