@@ -14,6 +14,15 @@ add_action('graphql_register_types', function () {
         }
     ]);
 
+    register_graphql_field('Pelicula', 'slugPelicula', [
+        'type' => 'String',
+        'description' => __('Slug de la película.', 'cinema'),
+        'resolve' => function($post) {
+            $slugPelicula = $post->post_name;
+            return !empty($slugPelicula) ? sanitize_text_field($slugPelicula) : null;
+        }
+    ]);
+
     register_graphql_field('Pelicula', 'duracion', [
         'type' => 'Int',
         'description' => __('Duración en Minutos', 'cinema'),
@@ -31,6 +40,16 @@ add_action('graphql_register_types', function () {
             return !empty($url_trailer) ? esc_url($url_trailer) : null;
         }
     ]);
+    
+        register_graphql_field('Pelicula', 'titlePelicula', [
+        'type' => 'String',
+        'description' => __('Título de la película', 'cinema'),
+        'resolve' => function($post) {
+            $title = $post->post_title;
+            return !empty($title) ? sanitize_text_field($title) : null;
+        }
+    ]);
+    
 
    register_graphql_field('Pelicula', 'cinemaHorarios', [
         'type' => [
@@ -140,6 +159,80 @@ register_graphql_field('Pelicula', 'imagenPoster', [
             return null;
         },
     ]);
-
+//  consultas
 
 });
+
+
+add_action('graphql_register_types', 'register_peliculas_query');
+
+function register_peliculas_query() {
+    register_graphql_field('RootQuery', 'peliculasFilter', [
+        'type' => [
+            'list_of' => 'Pelicula',
+        ],
+        'description' => 'Consulta películas basadas en criterios específicos.',
+        'args' => [
+            'where' => [
+                'type' => 'PeliculaQueryArgs',
+                'description' => 'Argumentos de consulta para películas.',
+            ],
+        ],
+        'resolve' => function ($root, $args) {
+            $query_args = [
+                'post_type' => 'pelicula', // Ajustar al tipo de post personalizado que estás utilizando
+                'meta_query' => [
+                    'relation' => 'OR',
+                ],
+            ];
+
+            // Añadir condiciones de consulta basadas en los argumentos proporcionados
+            if (isset($args['where']['preVenta']) && $args['where']['preVenta']) {
+                $query_args['meta_query'][] = [
+                    'key' => '_cinema_pre_venta',
+                    'value' => '1',
+                    'compare' => '=',
+                ];
+            }
+
+            if (isset($args['where']['cartelera']) && $args['where']['cartelera']) {
+                $query_args['meta_query'][] = [
+                    'key' => '_cinema_cartelera',
+                    'value' => '1',
+                    'compare' => '=',
+                ];
+            }
+
+            if (isset($args['where']['proximoEstreno']) && $args['where']['proximoEstreno']) {
+                $query_args['meta_query'][] = [
+                    'key' => '_cinema_proximo_estreno',
+                    'compare' => 'EXISTS',
+                ];
+            }
+
+            $query = new WP_Query($query_args);
+            return $query->posts;
+        },
+    ]);
+
+    // Definir los argumentos de consulta para películas
+    register_graphql_input_type('PeliculaQueryArgs', [
+        'description' => 'Argumentos de consulta para películas.',
+        'fields' => [
+            'preVenta' => [
+                'type' => 'Boolean',
+                'description' => 'Buscar películas en preventa.',
+            ],
+            'cartelera' => [
+                'type' => 'Boolean',
+                'description' => 'Buscar películas en cartelera.',
+            ],
+            'proximoEstreno' => [
+                'type' => 'Boolean',
+                'description' => 'Buscar películas próximas a estrenar.',
+            ],
+            // Añadir más campos de consulta según sea necesario
+        ],
+    ]);
+}
+
