@@ -17,14 +17,19 @@ add_action('add_meta_boxes', 'cinema_add_meta_box');
 function cinema_movie_details_callback($post) {
     wp_nonce_field('cinema_save_movie_details', 'cinema_movie_details_nonce');
 
-    $duracion = get_post_meta($post->ID, '_cinema_duracion', true);
+  // Obtener valores actuales si ya están guardados
     $clasificacion = get_post_meta($post->ID, '_cinema_clasificacion', true);
+    $duracion = get_post_meta($post->ID, '_cinema_duracion', true);
     $trailer = get_post_meta($post->ID, '_cinema_trailer', true);
-    $poster_id = get_post_meta($post->ID, '_cinema_poster_id', true);
+    $formato = get_post_meta($post->ID, '_cinema_formato', true);
+    $horarios = get_post_meta($post->ID, '_cinema_horarios', true);
+    $doblar = get_post_meta($post->ID, '_cinema_doblaje', true);
+    $poster = get_post_meta($post->ID, '_cinema_poster', true);
     $cartelera = get_post_meta($post->ID, '_cinema_cartelera', true);
     $proximo_estreno = get_post_meta($post->ID, '_cinema_proximo_estreno', true);
     $pre_venta = get_post_meta($post->ID, '_cinema_pre_venta', true);
-    $horarios = get_post_meta($post->ID, '_cinema_horarios', true);
+
+
 
     echo '<label for="cinema_clasificacion">Clasificación:</label>';
     echo '<input type="text" id="cinema_clasificacion" name="cinema_clasificacion" value="' . esc_attr($clasificacion) . '" size="25" />';
@@ -39,14 +44,14 @@ function cinema_movie_details_callback($post) {
     echo '<br/><br/>';
 
     echo '<label for="cinema_poster">Póster:</label>';
-    if ($poster_id) {
-        echo '<div><img src="' . esc_url(wp_get_attachment_image_url($poster_id, 'thumbnail')) . '" style="max-width: 200px; height: auto;" /><br/><a href="#" id="remove_cinema_poster">Eliminar</a></div>';
+    if ($poster) {
+        echo '<div><img src="' . esc_url(wp_get_attachment_image_url($poster, 'thumbnail')) . '" style="max-width: 200px; height: auto;" /><br/><a href="#" id="remove_cinema_poster">Eliminar</a></div>';
     }
-    echo '<input type="hidden" id="cinema_poster_id" name="cinema_poster_id" value="' . esc_attr($poster_id) . '" />';
+    echo '<input type="hidden" id="cinema_poster" name="cinema_poster" value="' . esc_attr($poster) . '" />';
     echo '<button class="button" id="upload_cinema_poster">Subir/Seleccionar Póster</button>';
     echo '<br/><br/>';
 
-  echo '<label for="cinema_cartelera">¿En Cartelera?</label>';
+    echo '<label for="cinema_cartelera">¿En Cartelera?</label>';
     echo '<input type="checkbox" id="cinema_cartelera" name="cinema_cartelera" value="1" ' . checked($cartelera, '1', false) . ' />';
     echo '<br/><br/>';
 
@@ -72,6 +77,8 @@ function cinema_movie_details_callback($post) {
         }
     }
     echo '</div>';
+    echo '<br/><br/>';
+
     echo '<button class="button add-horario">Añadir Horario</button>';
 
     ?>
@@ -89,7 +96,7 @@ function cinema_movie_details_callback($post) {
             });
             custom_uploader.on('select', function() {
                 var attachment = custom_uploader.state().get('selection').first().toJSON();
-                $('#cinema_poster_id').val(attachment.id);
+                $('#cinema_poster').val(attachment.id);
                 $('#cinema_poster').html('<img src="' + attachment.url + '" style="max-width:200px;height:auto;"/><br/><a href="#" id="remove_cinema_poster">Eliminar</a>');
             });
             custom_uploader.open();
@@ -98,7 +105,7 @@ function cinema_movie_details_callback($post) {
         // Eliminar Póster
         $(document).on('click', '#remove_cinema_poster', function(e) {
             e.preventDefault();
-            $('#cinema_poster_id').val('');
+            $('#cinema_poster').val('');
             $('#cinema_poster').html('<button class="button" id="upload_cinema_poster">Subir/Seleccionar Póster</button>');
         });
 
@@ -146,8 +153,8 @@ function cinema_save_movie_details($post_id) {
         update_post_meta($post_id, '_cinema_trailer', sanitize_text_field($_POST['cinema_trailer']));
     }
 
-    if (isset($_POST['cinema_poster_id'])) {
-        update_post_meta($post_id, '_cinema_poster_id', sanitize_text_field($_POST['cinema_poster_id']));
+    if (isset($_POST['cinema_poster'])) {
+        update_post_meta($post_id, '_cinema_poster', sanitize_text_field($_POST['cinema_poster']));
     }
 
     // Guardar opciones "sí o no"

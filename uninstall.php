@@ -9,7 +9,7 @@ global $wpdb;
 
 // Obtener IDs de todas las películas para eliminar metadatos asociados
 $movie_ids = get_posts(array(
-    'post_type' => 'peliculas',
+    'post_type' => 'pelicula',
     'numberposts' => -1,
     'fields' => 'ids',
 ));
@@ -30,7 +30,7 @@ foreach ($movie_ids as $movie_id) {
 $wpdb->query("DELETE FROM {$wpdb->prefix}options WHERE option_name LIKE 'cinema_%'");
 
 // Eliminar las traducciones del plugin si existen
-$mo_files = glob(WP_LANG_DIR . '/plugins/cinema-plugin-*.mo');
+$mo_files = glob(WP_LANG_DIR . '/plugins/cinema-*.mo');
 foreach ($mo_files as $mo_file) {
     unlink($mo_file);
 }
